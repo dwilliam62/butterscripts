@@ -46,11 +46,6 @@ show_header() {
     echo
 }
 
-# Function to pause
-pause() {
-    pause
-}
-
 # Function to ask yes/no questions
 ask_yes_no() {
     local prompt="$1"
@@ -117,6 +112,47 @@ download_script() {
     echo -e "${GREEN}Download complete.${NC}"
 }
 
+# Function to install Geany
+install_geany() {
+    show_header
+    echo -e "${CYAN}Installing Geany and plugins...${NC}"
+    
+    # Check if local install_geany.sh exists
+    if [ -f "./install_geany.sh" ]; then
+        echo -e "${YELLOW}Using local install_geany.sh script...${NC}"
+        bash "./install_geany.sh"
+    else
+        # Fallback to downloading from GitHub
+        echo -e "${YELLOW}Local script not found, downloading from GitHub...${NC}"
+        download_script "https://raw.githubusercontent.com/drewgrif/butterscripts/refs/heads/main/setup/install_geany.sh" "install_geany.sh"
+        bash "/tmp/install_geany.sh"
+    fi
+    
+    echo -e "${GREEN}Geany installation completed.${NC}"
+    read -p "Press Enter to continue..."
+}
+
+# Function to install Browsers
+install_browsers() {
+    show_header
+    echo -e "${CYAN}Installing Browsers...${NC}"
+    echo -e "${YELLOW}Note: The browser installer will present its own menu${NC}"
+    echo -e "${YELLOW}      for you to select which browser(s) to install.${NC}"
+    echo
+    
+    # Download the script
+    download_script "https://raw.githubusercontent.com/drewgrif/butterscripts/refs/heads/main/browsers/install_browsers.sh" "install_browsers.sh"
+    
+    echo -e "${YELLOW}Starting browser installer...${NC}"
+    echo -e "${YELLOW}Follow the prompts to select which browsers to install.${NC}"
+    echo
+    
+    # Execute the script
+    bash "/tmp/install_browsers.sh"
+    
+    echo -e "${GREEN}Browsers installation process completed.${NC}"
+    read -p "Press Enter to continue..."
+}
 
 # Function to install Discord
 install_discord() {
@@ -137,7 +173,7 @@ install_discord() {
     bash "/tmp/discord" install
     
     echo -e "${GREEN}Discord installation process completed.${NC}"
-    pause
+    read -p "Press Enter to continue..."
 }
 
 # Function to install Fastfetch
@@ -163,9 +199,45 @@ install_fastfetch() {
     bash "/tmp/install_fastfetch.sh"
     
     echo -e "${GREEN}Fastfetch installation completed.${NC}"
-    pause
+    read -p "Press Enter to continue..."
 }
 
+# Function to install Neovim using butterscripts
+install_butter_neovim() {
+    show_header
+    echo -e "${CYAN}Installing Neovim using buttervim.sh...${NC}"
+    echo -e "${YELLOW}Note: This will install JustAGuyLinux's Neovim configuration.${NC}"
+    echo -e "${YELLOW}      Any existing Neovim configuration will be backed up.${NC}"
+    echo
+    
+    # Download the script
+    download_script "https://raw.githubusercontent.com/drewgrif/butterscripts/refs/heads/main/neovim/buttervim.sh" "buttervim.sh"
+    
+    echo -e "${YELLOW}Starting Neovim installation...${NC}"
+    echo -e "${YELLOW}Follow the prompts during installation.${NC}"
+    echo
+    
+    # Execute the script
+    bash "/tmp/buttervim.sh"
+    
+    echo -e "${GREEN}Neovim installation process completed.${NC}"
+    read -p "Press Enter to continue..."
+}
+
+# Function to build and install Neovim from source
+build_neovim() {
+    show_header
+    echo -e "${CYAN}Building and installing Neovim from source...${NC}"
+    
+    # Download the script
+    download_script "https://raw.githubusercontent.com/drewgrif/butterscripts/refs/heads/main/neovim/build-neovim.sh" "build-neovim.sh"
+    
+    # Execute the script
+    bash "/tmp/build-neovim.sh"
+    
+    echo -e "${GREEN}Neovim build and installation completed.${NC}"
+    read -p "Press Enter to continue..."
+}
 
 # Function to install Printer Support
 install_printer_support() {
@@ -183,7 +255,7 @@ install_printer_support() {
     echo
     if ! ask_yes_no "Do you want to install these printer support packages?"; then
         echo -e "${YELLOW}Installation cancelled.${NC}"
-        pause
+        read -p "Press Enter to continue..."
         return
     fi
     
@@ -193,7 +265,7 @@ install_printer_support() {
     echo -e "${GREEN}Printer support installation completed.${NC}"
     echo -e "${YELLOW}You can access the CUPS web interface at http://localhost:631${NC}"
     echo -e "${YELLOW}or use system-config-printer to configure your printers.${NC}"
-    pause
+    read -p "Press Enter to continue..."
 }
 
 # Function to install Bluetooth Support
@@ -212,7 +284,7 @@ install_bluetooth_support() {
     echo
     if ! ask_yes_no "Do you want to install these bluetooth support packages?"; then
         echo -e "${YELLOW}Installation cancelled.${NC}"
-        pause
+        read -p "Press Enter to continue..."
         return
     fi
     
@@ -221,7 +293,7 @@ install_bluetooth_support() {
     
     echo -e "${GREEN}Bluetooth support installation completed.${NC}"
     echo -e "${YELLOW}You can use the Bluetooth Manager (blueman) to connect devices.${NC}"
-    pause
+    read -p "Press Enter to continue..."
 }
 
 # Function to prompt for package selection from a category
@@ -267,9 +339,8 @@ install_apt_packages() {
     local text_editors=("kate" "gedit" "l3afpad" "mousepad" "pluma")
     local multimedia=("mpv" "vlc" "audacity" "kdenlive" "obs-studio" "rhythmbox" "ncmpcpp" "mkvtoolnix-gui")
     local utilities=("gparted" "gnome-disk-utility" "nitrogen" "numlockx" "galculator" "cpu-x" "dnsutils" "whois" "curl" "tree" "btop" "htop" "bat" "brightnessctl")
-    # Use global arrays for printer and bluetooth
-    local printer=("${PRINTER_PACKAGES[@]}")
-    local bluetooth=("${BLUETOOTH_PACKAGES[@]}")
+    local printer=("cups" "cups-client" "cups-filters" "printer-driver-all" "system-config-printer" "hplip" "simple-scan")
+    local bluetooth=("bluetooth" "bluez" "bluez-tools" "blueman" "pulseaudio-module-bluetooth")
     
     # Arrays to store selected packages
     declare -a selected_file_managers=()
@@ -317,7 +388,7 @@ install_apt_packages() {
     # Display summary and confirm
     if [ ${#all_selections[@]} -eq 0 ]; then
         echo -e "${YELLOW}No packages selected for installation.${NC}"
-        pause
+        read -p "Press Enter to continue..."
         return
     fi
     
@@ -333,7 +404,7 @@ install_apt_packages() {
     
     if ! ask_yes_no "Do you want to install these packages?"; then
         echo -e "${YELLOW}Installation cancelled.${NC}"
-        pause
+        read -p "Press Enter to continue..."
         return
     fi
     
@@ -341,7 +412,7 @@ install_apt_packages() {
     install_package_group "${all_selections[@]}"
     
     echo -e "${GREEN}APT package installation completed.${NC}"
-    pause
+    read -p "Press Enter to continue..."
 }
 
 # ButterScripts menu function
@@ -365,36 +436,16 @@ show_butterscripts_menu() {
         read -p "Enter your choice [1-7]: " choice
         
         case $choice in
-            1) 
-                download_script "https://raw.githubusercontent.com/drewgrif/butterscripts/refs/heads/main/setup/install_geany.sh" "install_geany.sh"
-                bash "/tmp/install_geany.sh"
-                echo -e "${GREEN}Geany installation completed.${NC}"
-                pause
-                ;;
-            2) 
-                download_script "https://raw.githubusercontent.com/drewgrif/butterscripts/refs/heads/main/browsers/install_browsers.sh" "install_browsers.sh"
-                bash "/tmp/install_browsers.sh"
-                echo -e "${GREEN}Browsers installation process completed.${NC}"
-                pause
-                ;;
-            3) install_discord ;;  # This one is different, keep as is
-            4) install_fastfetch ;; # This one needs config files, keep as is
-            5) 
-                download_script "https://raw.githubusercontent.com/drewgrif/butterscripts/refs/heads/main/neovim/buttervim.sh" "buttervim.sh"
-                bash "/tmp/buttervim.sh"
-                echo -e "${GREEN}Neovim installation process completed.${NC}"
-                pause
-                ;;
-            6) 
-                download_script "https://raw.githubusercontent.com/drewgrif/butterscripts/refs/heads/main/neovim/build-neovim.sh" "build-neovim.sh"
-                bash "/tmp/build-neovim.sh"
-                echo -e "${GREEN}Neovim build and installation completed.${NC}"
-                pause
-                ;;
+            1) install_geany ;;
+            2) install_browsers ;;
+            3) install_discord ;;
+            4) install_fastfetch ;;
+            5) install_butter_neovim ;;
+            6) build_neovim ;;
             7) return ;;
             *)
                 echo -e "${RED}Invalid option. Please try again.${NC}"
-                pause
+                read -p "Press Enter to continue..."
                 ;;
         esac
     done
@@ -419,7 +470,7 @@ show_system_support_menu() {
             3) return ;;
             *)
                 echo -e "${RED}Invalid option. Please try again.${NC}"
-                pause
+                read -p "Press Enter to continue..."
                 ;;
         esac
     done
@@ -439,7 +490,7 @@ reboot_system() {
         sudo reboot
     else
         echo -e "${YELLOW}Reboot cancelled. You can reboot manually later.${NC}"
-        pause
+        read -p "Press Enter to continue..."
     fi
 }
 
@@ -469,7 +520,7 @@ show_main_menu() {
                 ;;
             *)
                 echo -e "${RED}Invalid option. Please try again.${NC}"
-                pause
+                read -p "Press Enter to continue..."
                 ;;
         esac
     done
