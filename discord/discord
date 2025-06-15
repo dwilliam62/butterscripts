@@ -84,6 +84,10 @@ Type=Application
 Categories=Network;InstantMessaging;
 Path=/usr/bin
 EOF"
+    
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "✨ 🎉 DISCORD INSTALLED SUCCESSFULLY! 🎉 ✨"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 }
 
 # Uninstall function
