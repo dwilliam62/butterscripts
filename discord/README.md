@@ -34,6 +34,8 @@ chmod +x discord
 ```
 
 ## Usage
+
+**Before setup:**
 ```bash
 # Install or update Discord
 ./discord
@@ -41,11 +43,20 @@ chmod +x discord
 # Uninstall Discord
 ./discord uninstall
 
-# Setup script globally (optional)
+# Setup script globally
 ./discord setup
+```
+
+**After setup (global usage):**
+```bash
+# Install or update Discord
+discord
+
+# Uninstall Discord
+discord uninstall
 
 # Show help
-./discord help
+discord help
 ```
 
 ## How It Works
