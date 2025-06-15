@@ -48,7 +48,7 @@ show_header() {
 
 # Function to pause
 pause() {
-    pause
+    read -p "Press Enter to continue..." -r
 }
 
 # Function to ask yes/no questions
