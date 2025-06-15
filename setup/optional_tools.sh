@@ -367,28 +367,40 @@ show_butterscripts_menu() {
         case $choice in
             1) 
                 download_script "https://raw.githubusercontent.com/drewgrif/butterscripts/refs/heads/main/setup/install_geany.sh" "install_geany.sh"
-                bash "/tmp/install_geany.sh"
-                echo -e "${GREEN}Geany installation completed.${NC}"
+                if bash "/tmp/install_geany.sh"; then
+                    echo -e "${GREEN}Geany installation completed.${NC}"
+                else
+                    echo -e "${RED}Geany installation failed or was cancelled.${NC}"
+                fi
                 pause
                 ;;
             2) 
                 download_script "https://raw.githubusercontent.com/drewgrif/butterscripts/refs/heads/main/browsers/install_browsers.sh" "install_browsers.sh"
-                bash "/tmp/install_browsers.sh"
-                echo -e "${GREEN}Browsers installation process completed.${NC}"
+                if bash "/tmp/install_browsers.sh"; then
+                    echo -e "${GREEN}Browsers installation process completed.${NC}"
+                else
+                    echo -e "${RED}Browsers installation failed or was cancelled.${NC}"
+                fi
                 pause
                 ;;
             3) install_discord ;;  # This one is different, keep as is
             4) install_fastfetch ;; # This one needs config files, keep as is
             5) 
                 download_script "https://raw.githubusercontent.com/drewgrif/butterscripts/refs/heads/main/neovim/buttervim.sh" "buttervim.sh"
-                bash "/tmp/buttervim.sh"
-                echo -e "${GREEN}Neovim installation process completed.${NC}"
+                if bash "/tmp/buttervim.sh"; then
+                    echo -e "${GREEN}Neovim installation process completed.${NC}"
+                else
+                    echo -e "${RED}Neovim installation failed or was cancelled.${NC}"
+                fi
                 pause
                 ;;
             6) 
                 download_script "https://raw.githubusercontent.com/drewgrif/butterscripts/refs/heads/main/neovim/build-neovim.sh" "build-neovim.sh"
-                bash "/tmp/build-neovim.sh"
-                echo -e "${GREEN}Neovim build and installation completed.${NC}"
+                if bash "/tmp/build-neovim.sh"; then
+                    echo -e "${GREEN}Neovim build and installation completed.${NC}"
+                else
+                    echo -e "${RED}Neovim build and installation failed or was cancelled.${NC}"
+                fi
                 pause
                 ;;
             7) return ;;
