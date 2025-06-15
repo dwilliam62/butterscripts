@@ -1,8 +1,6 @@
-# 🧈 Butter Discord
+# 🧈 Discord Installer
 
 A simple Discord installer and updater for Linux systems.
-
-> **Note:** The setup process will ask for permission before modifying your shell configuration files. You can decline and manually add ~/.local/bin to your PATH if preferred.
 
 ## Features
 - Installs and updates Discord with a single command
@@ -10,14 +8,14 @@ A simple Discord installer and updater for Linux systems.
 - User-level installation to ~/.local/bin
 - Automatic shell environment configuration
 - Clean uninstallation option
+- Uses wget or curl (automatically detects)
 
 ## Requirements
 - Linux-based operating system
-- wget for downloading files
+- wget or curl for downloading files
 - sudo privileges for Discord installation
 
 ## Installation
-To set up Butter Discord:
 ```bash
 # Clone repository
 git clone https://github.com/drewgrif/butterscripts.git
@@ -26,23 +24,28 @@ git clone https://github.com/drewgrif/butterscripts.git
 cd butterscripts/discord
 
 # Make executable
-chmod +x butterdis.sh
+chmod +x discord
 
-# Setup script in your environment
-./butterdis.sh setup
+# Install Discord
+./discord
 
+# (Optional) Setup script globally
+./discord setup
 ```
 
 ## Usage
 ```bash
 # Install or update Discord
-butter-discord
+./discord
 
 # Uninstall Discord
-butter-discord uninstall
+./discord uninstall
 
-# Show help information
-butter-discord help
+# Setup script globally (optional)
+./discord setup
+
+# Show help
+./discord help
 ```
 
 ## How It Works
