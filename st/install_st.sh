@@ -15,6 +15,7 @@ make
 sudo make install
 
 # Create desktop file
+mkdir -p ~/.local/share/applications
 cat > ~/.local/share/applications/st.desktop << EOF
 [Desktop Entry]
 Name=st
