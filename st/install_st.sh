@@ -4,6 +4,13 @@
 
 set -e
 
+# Check if st is already installed
+if command -v st &> /dev/null; then
+    echo "ST is already installed at: $(which st)"
+    # Use return if sourced, exit if run directly
+    [[ "${BASH_SOURCE[0]}" != "${0}" ]] && return 0 || exit 0
+fi
+
 # Install dependencies
 sudo apt-get update || true
 sudo apt-get install -y git make gcc libx11-dev libxft-dev libxinerama-dev
