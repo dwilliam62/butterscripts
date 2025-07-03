@@ -31,7 +31,10 @@ yes | ./install.sh -c dark -t grey --tweaks black >/dev/null 2>&1 || die "GTK th
 cd "$TEMP_DIR"
 git clone -q https://github.com/vinceliuice/Colloid-icon-theme || die "Failed to clone icon theme"
 cd Colloid-icon-theme
-./install.sh -t grey -s dracula >/dev/null 2>&1 || die "Icon theme install failed"
+./install.sh -t grey -s dracula 2>&1 | grep -v "sed: can't read" >/dev/null || true
+
+# Verify icon theme installation
+[ ! -d "$HOME/.local/share/icons/$ICON_THEME" ] && [ ! -d "$HOME/.icons/$ICON_THEME" ] && die "Icon theme installation verification failed"
 
 # Apply settings
 mkdir -p ~/.config/gtk-3.0
