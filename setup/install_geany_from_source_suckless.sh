@@ -1,123 +1,150 @@
 #!/bin/bash
 
-# Geany Installation and Configuration Script
-# This script installs Geany and applies your custom configuration
-# from the butterscripts repository by drewgrif
+# Geany 2.1 Source Installation Script
 
-# Define color codes
-GREEN='\033[0;32m'
-CYAN='\033[0;36m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
+set -e
 
-set -e  # Exit on any error
+GEANY_VERSION="2.1"
+GEANY_PLUGINS_VERSION="2.1"
 
-echo -e "${CYAN}Installing Geany and essential plugins...${NC}"
-
-# Install Geany and only the plugins we're actually using
+# Install build dependencies
 if command -v apt &> /dev/null; then
     sudo apt update
-    # Install base Geany
-    sudo apt install -y geany
-    
-    # Install only the specific plugins we need
-    # Check if individual plugin packages exist, otherwise install the full suite
-    if apt list geany-plugin-addons 2>/dev/null | grep -q geany-plugin-addons; then
-        sudo apt install -y geany-plugin-addons geany-plugin-automark geany-plugin-git-changebar \
-                           geany-plugin-insertnum geany-plugin-markdown geany-plugin-spellcheck \
-                           geany-plugin-treebrowser
-    else
-        # Fallback to full plugin package if individual packages don't exist
-        sudo apt install -y geany-plugins
-    fi
-    
-elif command -v pacman &> /dev/null; then
-    sudo pacman -S --noconfirm geany geany-plugins
+    sudo apt install -y build-essential autoconf automake libtool intltool \
+        libgtk-3-dev libxml2-dev libxml2-utils python3-docutils \
+        python3-lxml rst2pdf git meson ninja-build \
+        libglib2.0-dev libgirepository1.0-dev \
+        libenchant-2-dev libgit2-dev libgpgme-dev libsoup2.4-dev \
+        libctpl-dev libmarkdown2-dev libwebkit2gtk-4.0-dev \
+        check cppcheck valac
 elif command -v dnf &> /dev/null; then
-    sudo dnf install -y geany geany-plugins
-elif command -v zypper &> /dev/null; then
-    sudo zypper install -y geany geany-plugins
+    sudo dnf groupinstall -y "Development Tools"
+    sudo dnf install -y gtk3-devel intltool python3-docutils \
+        glib2-devel gobject-introspection-devel \
+        enchant2-devel libgit2-devel gpgme-devel libsoup-devel \
+        ctpl-devel libmarkdown-devel webkit2gtk3-devel \
+        check cppcheck vala meson ninja-build
 else
-    echo -e "${RED}Unsupported package manager. Please install Geany manually.${NC}"
+    echo "Unsupported package manager"
     exit 1
 fi
 
-echo -e "${GREEN}Geany installed successfully!${NC}"
+# Build Geany
+BUILD_DIR="$HOME/build-geany-${GEANY_VERSION}"
+mkdir -p "$BUILD_DIR"
+cd "$BUILD_DIR"
 
-# Install custom color schemes from drewgrif/geany-themes
-echo -e "${CYAN}Installing custom Geany color schemes...${NC}"
+wget -q --show-progress "https://download.geany.org/geany-${GEANY_VERSION}.tar.bz2"
+tar -xjf "geany-${GEANY_VERSION}.tar.bz2"
+cd "geany-${GEANY_VERSION}"
 
-# Create colorschemes directory
-COLORSCHEMES_DIR="$HOME/.config/geany/colorschemes"
-mkdir -p "$COLORSCHEMES_DIR"
+./configure --prefix="$HOME/.local" --enable-gtk3
+make -j$(nproc)
+make install
 
-# Clone the geany-themes repository to a temporary location
-TEMP_THEMES_DIR="/tmp/geany-themes"
-if [ -d "$TEMP_THEMES_DIR" ]; then
-    rm -rf "$TEMP_THEMES_DIR"
+# Build plugins
+cd "$BUILD_DIR"
+wget -q --show-progress "https://plugins.geany.org/geany-plugins/geany-plugins-${GEANY_PLUGINS_VERSION}.tar.bz2" || \
+    wget -q --show-progress "https://github.com/geany/geany-plugins/releases/download/${GEANY_PLUGINS_VERSION}/geany-plugins-${GEANY_PLUGINS_VERSION}.tar.bz2"
+
+if [ -f "geany-plugins-${GEANY_PLUGINS_VERSION}.tar.bz2" ]; then
+    tar -xjf "geany-plugins-${GEANY_PLUGINS_VERSION}.tar.bz2"
+    cd "geany-plugins-${GEANY_PLUGINS_VERSION}"
+    
+    export PKG_CONFIG_PATH="$HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH"
+    ./configure --prefix="$HOME/.local" --with-geany-libdir="$HOME/.local/lib"
+    make -j$(nproc)
+    make install
 fi
 
-git clone https://github.com/drewgrif/geany-themes.git "$TEMP_THEMES_DIR"
+# Create desktop file
+DESKTOP_DIR="$HOME/.local/share/applications"
+mkdir -p "$DESKTOP_DIR"
 
-# Copy all .conf files to the colorschemes directory
-if [ -d "$TEMP_THEMES_DIR" ]; then
-    cp "$TEMP_THEMES_DIR/colorschemes"/*.conf "$COLORSCHEMES_DIR/" 2>/dev/null || echo -e "${YELLOW}Note: Some theme files may not have been copied${NC}"
-    echo -e "${GREEN}Custom color schemes installed successfully!${NC}"
-    
-    # List available themes
-    echo -e "${CYAN}Available themes:${NC}"
-    ls "$COLORSCHEMES_DIR"/*.conf 2>/dev/null | sed 's|.*/||' | sed 's|\.conf$||' | sort
-    
-    # Clean up
-    rm -rf "$TEMP_THEMES_DIR"
+if command -v /usr/bin/geany &> /dev/null; then
+    cat > "$DESKTOP_DIR/geany-2.1.desktop" << EOF
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Geany 2.1
+GenericName=Integrated Development Environment
+Comment=A fast and lightweight IDE using GTK+
+Exec=$HOME/.local/bin/geany %F
+Icon=geany
+Terminal=false
+Categories=GTK;Development;IDE;TextEditor;
+MimeType=text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;
+StartupNotify=true
+Keywords=Text;Editor;
+EOF
 else
-    echo -e "${YELLOW}Warning: Could not clone themes repository. Using default themes.${NC}"
+    cat > "$DESKTOP_DIR/geany.desktop" << EOF
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Geany
+GenericName=Integrated Development Environment
+Comment=A fast and lightweight IDE using GTK+
+Exec=$HOME/.local/bin/geany %F
+Icon=geany
+Terminal=false
+Categories=GTK;Development;IDE;TextEditor;
+MimeType=text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;
+StartupNotify=true
+Keywords=Text;Editor;
+EOF
 fi
 
-# Create Geany config directory if it doesn't exist
-CONFIG_DIR="$HOME/.config/geany"
-mkdir -p "$CONFIG_DIR"
+# Clean up
+cd "$HOME"
+rm -rf "$BUILD_DIR"
 
-echo -e "${CYAN}Applying custom Geany configuration...${NC}"
+# Create system-wide symlink
+[ ! -e /usr/local/bin/geany ] && sudo ln -s "$HOME/.local/bin/geany" /usr/local/bin/geany
 
-# Function to detect plugin paths and build list of only the plugins we want
-detect_plugin_paths() {
-    local plugin_paths=""
-    local base_paths=(
-        "/usr/lib/x86_64-linux-gnu/geany"
-        "/usr/lib64/geany"
-        "/usr/lib/geany"
-        "/usr/local/lib/geany"
-    )
+# Update PATH if needed
+if ! echo "$PATH" | grep -q "$HOME/.local/bin"; then
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+fi
+
+# Apply butterscripts config
+read -p "Apply butterscripts config? (y/N) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    CONFIG_DIR="$HOME/.config/geany"
+    mkdir -p "$CONFIG_DIR"
     
-    # Only the plugins we're actually configuring and using
-    local wanted_plugins=("addons" "automark" "git-changebar" "geanyinsertnum" "markdown" "spellcheck" "splitwindow" "treebrowser")
+    [ -f "$CONFIG_DIR/geany.conf" ] && echo "Warning: Overwriting existing config" && sleep 2
     
-    for path in "${base_paths[@]}"; do
-        if [ -d "$path" ]; then
-            local available_plugins=""
-            for plugin in "${wanted_plugins[@]}"; do
-                if [ -f "$path/$plugin.so" ]; then
-                    if [ -n "$available_plugins" ]; then
-                        available_plugins="$available_plugins;$path/$plugin.so"
-                    else
-                        available_plugins="$path/$plugin.so"
-                    fi
-                fi
-            done
-            plugin_paths="$available_plugins"
-            break
-        fi
-    done
-    echo "$plugin_paths"
-}
-
-# Detect available plugins
-PLUGIN_PATHS=$(detect_plugin_paths)
-
-# Create clean configuration for fresh installation
-cat > "$CONFIG_DIR/geany.conf" << EOF
+    # Get color schemes
+    COLORSCHEMES_DIR="$CONFIG_DIR/colorschemes"
+    mkdir -p "$COLORSCHEMES_DIR"
+    EXISTING_SCHEMES=$(ls "$COLORSCHEMES_DIR"/*.conf 2>/dev/null | wc -l)
+    
+    if [ "$EXISTING_SCHEMES" -lt 5 ]; then
+        TEMP_THEMES_DIR="/tmp/geany-themes"
+        [ -d "$TEMP_THEMES_DIR" ] && rm -rf "$TEMP_THEMES_DIR"
+        git clone -q https://github.com/drewgrif/geany-themes.git "$TEMP_THEMES_DIR"
+        [ -d "$TEMP_THEMES_DIR" ] && cp "$TEMP_THEMES_DIR/colorschemes"/*.conf "$COLORSCHEMES_DIR/" 2>/dev/null
+        rm -rf "$TEMP_THEMES_DIR"
+    fi
+    
+    # Detect plugins
+    PLUGIN_PATHS=""
+    PLUGIN_DIR="$HOME/.local/lib/geany"
+    WANTED_PLUGINS=("addons" "automark" "git-changebar" "geanyinsertnum" "markdown" "spellcheck" "splitwindow" "treebrowser")
+    
+    if [ -d "$PLUGIN_DIR" ]; then
+        for plugin in "${WANTED_PLUGINS[@]}"; do
+            if [ -f "$PLUGIN_DIR/$plugin.so" ]; then
+                [ -n "$PLUGIN_PATHS" ] && PLUGIN_PATHS="$PLUGIN_PATHS;"
+                PLUGIN_PATHS="${PLUGIN_PATHS}$PLUGIN_DIR/$plugin.so"
+            fi
+        done
+    fi
+    
+    # Main config
+    cat > "$CONFIG_DIR/geany.conf" << 'EOF'
 [geany]
 default_open_path=
 cmdline_new_files=true
@@ -341,11 +368,10 @@ project_file_path=$HOME/projects
 recent_files=
 recent_projects=
 current_page=0
-
 EOF
 
-# Create keybindings configuration with all defaults plus our custom bindings
-cat > "$CONFIG_DIR/keybindings.conf" << 'EOF'
+    # Keybindings
+    cat > "$CONFIG_DIR/keybindings.conf" << 'EOF'
 [Bindings]
 menu_new=<Primary>n
 menu_open=<Primary>o
@@ -540,12 +566,9 @@ rename_refresh=
 track_current=
 EOF
 
-# Create projects directory if it doesn't exist
-mkdir -p "$HOME/projects"
-
-# Configure Markdown plugin to use message window instead of sidebar
-mkdir -p "$CONFIG_DIR/plugins/markdown"
-cat > "$CONFIG_DIR/plugins/markdown/markdown.conf" << EOF
+    # Plugin configs
+    mkdir -p "$CONFIG_DIR/plugins/markdown"
+    cat > "$CONFIG_DIR/plugins/markdown/markdown.conf" << 'EOF'
 [markdown]
 preview_in_msgwin=true
 preview_in_sidebar=false
@@ -563,9 +586,8 @@ bg_color=#ffffff
 fg_color=#000000
 EOF
 
-# Configure Addons plugin
-mkdir -p "$CONFIG_DIR/plugins/addons"
-cat > "$CONFIG_DIR/plugins/addons/addons.conf" << EOF
+    mkdir -p "$CONFIG_DIR/plugins/addons"
+    cat > "$CONFIG_DIR/plugins/addons/addons.conf" << 'EOF'
 [addons]
 show_toolbar_doclist_item=true
 doclist_sort_mode=2
@@ -585,9 +607,8 @@ enable_colortip=true
 enable_double_click_color_chooser=false
 EOF
 
-# Configure Treebrowser plugin
-mkdir -p "$CONFIG_DIR/plugins/treebrowser"
-cat > "$CONFIG_DIR/plugins/treebrowser/treebrowser.conf" << EOF
+    mkdir -p "$CONFIG_DIR/plugins/treebrowser"
+    cat > "$CONFIG_DIR/plugins/treebrowser/treebrowser.conf" << 'EOF'
 [treebrowser]
 open_external_cmd=wezterm -e nvim '%f'
 open_terminal=wezterm
@@ -606,43 +627,8 @@ show_icons=2
 open_new_files=true
 EOF
 
-echo -e "${GREEN}Custom Geany configuration applied successfully!${NC}"
-echo ""
-echo -e "${GREEN}✓ Geany installed with essential plugins only${NC}"
-echo -e "${GREEN}✓ Custom color schemes installed from drewgrif/geany-themes${NC}"
-echo -e "${GREEN}✓ GitHub dark theme configured (or best available)${NC}"
-echo -e "${GREEN}✓ Useful plugins enabled (if available):${NC}"
-echo -e "${CYAN}  - Addons (extra tools + color calltips)${NC}"
-echo -e "${CYAN}  - Automark (highlight matching words)${NC}"
-echo -e "${CYAN}  - Git changebar (show git changes)${NC}"
-echo -e "${CYAN}  - Insert numbers${NC}"
-echo -e "${CYAN}  - Markdown support (in message window)${NC}"
-echo -e "${CYAN}  - Spell check${NC}"
-echo -e "${CYAN}  - Split window${NC}"
-echo -e "${CYAN}  - Tree browser (shows hidden files, uses WezTerm, toolbar at bottom)${NC}"
-echo -e "${GREEN}✓ Clean configuration ready for first use${NC}"
-echo -e "${GREEN}✓ Projects directory created at ~/projects${NC}"
-echo -e "${GREEN}✓ Color calltips enabled for CSS/HTML color values${NC}"
-echo -e "${GREEN}✓ Treebrowser shows hidden files and dotfiles${NC}"
-echo -e "${GREEN}✓ Treebrowser toolbar positioned at bottom${NC}"
-echo -e "${GREEN}✓ Default terminal set to WezTerm${NC}"
-echo ""
-echo -e "${CYAN}Geany is ready to use! Launch it and enjoy your pre-configured setup.${NC}"
-
-# Optional: Check if preferred color scheme exists, fallback gracefully
-PREFERRED_SCHEME="github-dark-default.conf"
-if [ -f "$COLORSCHEMES_DIR/$PREFERRED_SCHEME" ]; then
-    echo -e "${GREEN}✓ Preferred GitHub dark theme is available${NC}"
-elif [ -f "$COLORSCHEMES_DIR/github-dark.conf" ]; then
-    echo -e "${GREEN}✓ GitHub dark theme variant found${NC}"
-    # Update config to use available variant
-    sed -i 's/color_scheme=github-dark-default.conf/color_scheme=github-dark.conf/' "$CONFIG_DIR/geany.conf"
-else
-    echo -e "${YELLOW}⚠️  GitHub dark theme not found, using first available dark theme${NC}"
-    # Find any dark theme and use it
-    DARK_THEME=$(ls "$COLORSCHEMES_DIR"/*dark*.conf 2>/dev/null | head -1 | sed 's|.*/||')
-    if [ -n "$DARK_THEME" ]; then
-        sed -i "s/color_scheme=github-dark-default.conf/color_scheme=$DARK_THEME/" "$CONFIG_DIR/geany.conf"
-        echo -e "${GREEN}✓ Using $DARK_THEME instead${NC}"
-    fi
+    mkdir -p "$HOME/projects"
 fi
+
+echo "Done."
+echo "Run 'source ~/.bashrc' if needed"
