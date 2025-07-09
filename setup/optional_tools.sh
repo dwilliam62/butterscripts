@@ -351,7 +351,7 @@ show_butterscripts_menu() {
     while true; do
         show_header
         echo -e "${YELLOW}Select a ButterScript to install:${NC}"
-        echo -e "${CYAN}1. ${NC}Geany - Text Editor with plugins"
+        echo -e "${CYAN}1. ${NC}Geany - Text Editor with plugins (Latest version 2.1 from source)"
         echo -e "${CYAN}2. ${NC}Browsers - Firefox, LibreWolf, Brave, Floorp, Vivaldi, Chromium, Zen"
         echo -e "${CYAN}3. ${NC}Discord - Chat and Voice Application"
         echo -e "${CYAN}4. ${NC}Fastfetch - System Information Display Tool"
