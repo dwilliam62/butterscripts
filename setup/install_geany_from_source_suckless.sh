@@ -144,7 +144,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     fi
     
     # Main config
-    cat > "$CONFIG_DIR/geany.conf" << 'EOF'
+    cat > "$CONFIG_DIR/geany.conf" << EOF
 [geany]
 default_open_path=
 cmdline_new_files=true
