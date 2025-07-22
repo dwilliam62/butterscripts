@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Install JustAGuyLinux Neovim configuration
 # butter-nvim.sh: Install JustAGuyLinux Neovim Configuration
 # -----------------------------------------------------------
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Merge all MKV files in ~/Videos directory into a single file
 
 # MKV Merge Script with Rename Prompt
 # Merges all MKV files in ~/Videos and prompts for final filename

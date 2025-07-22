@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# DESC: Install WezTerm terminal emulator from official repository
 # ============================================
 # Install WezTerm - Terminal Emulator
 # ============================================

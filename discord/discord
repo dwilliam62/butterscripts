@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Launch Discord - download and install if not present
 set -e
 
 # Define variables

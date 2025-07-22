@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Install and configure Bluetooth services and utilities
 
 echo "=== Bluetooth Support Installation ==="
 

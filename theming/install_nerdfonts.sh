@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Download and install popular Nerd Fonts for terminal and code editor use
 
 # Nerd Fonts Installer
 # A script to download and install popular Nerd Fonts

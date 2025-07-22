@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Install various web browsers (Chrome, Firefox, Brave, etc.)
 
 # Browser Installation Scripts for Debian Stable
 # This script provides installation methods for various browsers

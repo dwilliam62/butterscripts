@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Build and install FT-Labs Picom compositor with dependencies
 set -e
 # install-picom-ftlabs.sh: Build and install FT-Labs Picom
 

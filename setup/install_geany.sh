@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Install Geany 2.1 text editor and plugins from source with all dependencies
 
 # Geany 2.1 Source Installation Script
 

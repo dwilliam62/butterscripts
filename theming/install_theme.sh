@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Install Orchis Grey Dark GTK theme and Colloid Grey Dracula Dark icon theme
 
 set -e
 

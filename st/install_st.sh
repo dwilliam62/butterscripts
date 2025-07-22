@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Build and install Suckless ST terminal from source
 
 # ST Terminal Installer - Suckless version
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Build and install latest Neovim from source
 # Script to build and install the latest Neovim from source
 
 set -e  # Exit immediately if a command exits with a non-zero status

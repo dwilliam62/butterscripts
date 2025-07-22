@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Configure custom search engines in Firefox using policies.json
 # Automated Firefox Search Engine Setup using policies.json
 
 set -e

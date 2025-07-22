@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Interactive installer for optional applications from butterscripts and APT repositories
 
 # Butter Applications Installer
 # This script allows you to choose which applications to install from the

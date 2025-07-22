@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Install CUPS and printing services for printer support
 
 echo "=== Printer Support Installation ==="
 

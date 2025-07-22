@@ -1,4 +1,5 @@
 #!/bin/bash
+# DESC: Install Fastfetch system info tool from official deb package
 set -e
 # fastfetch.sh: Install and configure Fastfetch from deb package
 

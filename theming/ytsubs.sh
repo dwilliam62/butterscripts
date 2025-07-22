@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# DESC: Fetch YouTube channel subscriber count using YouTube Data API v3
 #
 # YouTube Subscriber Count Fetcher
 # Uses YouTube Data API v3 (official and reliable method)
