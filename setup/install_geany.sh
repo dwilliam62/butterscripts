@@ -1,12 +1,73 @@
 #!/bin/bash
-# DESC: Install Geany 2.1 text editor and plugins from source with all dependencies
+# DESC: Install Geany text editor - choice of APT package (2.0) or source compilation (2.1)
 
-# Geany 2.1 Source Installation Script
+# Geany Installation Script with Version Choice
 
 set -e
 
+# Color codes
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
 GEANY_VERSION="2.1"
 GEANY_PLUGINS_VERSION="2.1"
+
+# Function to display header
+show_header() {
+    clear
+    echo -e "${CYAN}=========================================================${NC}"
+    echo -e "${CYAN}                  GEANY INSTALLER                        ${NC}"
+    echo -e "${CYAN}=========================================================${NC}"
+    echo
+}
+
+# Function to ask yes/no questions
+ask_yes_no() {
+    local prompt="$1"
+    local response
+    
+    while true; do
+        read -p "$prompt [y/n]: " response
+        case "${response,,}" in
+            y|yes) return 0 ;;
+            n|no) return 1 ;;
+            *) echo -e "${RED}Please answer yes or no.${NC}" ;;
+        esac
+    done
+}
+
+# Function to install Geany from APT
+install_geany_apt() {
+    echo -e "${CYAN}Installing Geany 2.0 from APT repositories...${NC}"
+    echo -e "${YELLOW}This will install the stable Debian 13 package version.${NC}"
+    echo
+    
+    # Update package lists
+    echo -e "${YELLOW}Updating package lists...${NC}"
+    sudo apt update
+    
+    # Install Geany and common plugins
+    echo -e "${YELLOW}Installing Geany and plugins...${NC}"
+    sudo apt install -y geany geany-plugins
+    
+    echo -e "${GREEN}Geany 2.0 installation completed!${NC}"
+    echo -e "${YELLOW}Geany has been installed from APT packages.${NC}"
+    
+    # Ask about applying config
+    echo
+    if ask_yes_no "Apply butterscripts configuration?"; then
+        apply_butterscripts_config
+    fi
+}
+
+# Function to install Geany from source
+install_geany_source() {
+    echo -e "${CYAN}Installing Geany 2.1 from source...${NC}"
+    echo -e "${YELLOW}This will compile the latest version with all features.${NC}"
+    echo
 
 # Install build dependencies
 if command -v apt &> /dev/null; then
@@ -108,10 +169,17 @@ if ! echo "$PATH" | grep -q "$HOME/.local/bin"; then
     echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
 fi
 
-# Apply butterscripts config
-read -p "Apply butterscripts config? (y/N) " -n 1 -r
+echo -e "${GREEN}Geany 2.1 built from source successfully!${NC}"
+
+# Ask about applying config
 echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
+if ask_yes_no "Apply butterscripts configuration?"; then
+    apply_butterscripts_config
+fi
+}
+
+# Function to apply butterscripts configuration
+apply_butterscripts_config() {
     CONFIG_DIR="$HOME/.config/geany"
     mkdir -p "$CONFIG_DIR"
     
@@ -130,19 +198,23 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         rm -rf "$TEMP_THEMES_DIR"
     fi
     
-    # Detect plugins
+    # Detect plugins - check both system and local installations
     PLUGIN_PATHS=""
-    PLUGIN_DIR="$HOME/.local/lib/geany"
+    PLUGIN_DIRS=("$HOME/.local/lib/geany" "/usr/lib/x86_64-linux-gnu/geany" "/usr/lib/geany")
     WANTED_PLUGINS=("addons" "automark" "git-changebar" "geanyinsertnum" "markdown" "spellcheck" "splitwindow" "treebrowser")
     
-    if [ -d "$PLUGIN_DIR" ]; then
-        for plugin in "${WANTED_PLUGINS[@]}"; do
-            if [ -f "$PLUGIN_DIR/$plugin.so" ]; then
-                [ -n "$PLUGIN_PATHS" ] && PLUGIN_PATHS="$PLUGIN_PATHS;"
-                PLUGIN_PATHS="${PLUGIN_PATHS}$PLUGIN_DIR/$plugin.so"
-            fi
-        done
-    fi
+    for dir in "${PLUGIN_DIRS[@]}"; do
+        if [ -d "$dir" ]; then
+            for plugin in "${WANTED_PLUGINS[@]}"; do
+                if [ -f "$dir/$plugin.so" ]; then
+                    [ -n "$PLUGIN_PATHS" ] && PLUGIN_PATHS="$PLUGIN_PATHS;"
+                    PLUGIN_PATHS="${PLUGIN_PATHS}$dir/$plugin.so"
+                fi
+            done
+            # If we found plugins in this directory, stop searching
+            [ -n "$PLUGIN_PATHS" ] && break
+        fi
+    done
     
     # Main config
     cat > "$CONFIG_DIR/geany.conf" << EOF
@@ -348,7 +420,7 @@ colour_back=#000000
 last_dir=$HOME
 
 [tools]
-terminal_cmd=wezterm -e "/bin/sh %c"
+terminal_cmd=x-terminal-emulator -e "/bin/sh %c"
 browser_cmd=sensible-browser
 grep_cmd=grep
 
@@ -611,8 +683,8 @@ EOF
     mkdir -p "$CONFIG_DIR/plugins/treebrowser"
     cat > "$CONFIG_DIR/plugins/treebrowser/treebrowser.conf" << 'EOF'
 [treebrowser]
-open_external_cmd=wezterm -e nvim '%f'
-open_terminal=wezterm
+open_external_cmd=x-terminal-emulator -e nvim '%f'
+open_terminal=x-terminal-emulator
 reverse_filter=false
 one_click_chdoc=false
 show_hidden_files=true
@@ -629,7 +701,47 @@ open_new_files=true
 EOF
 
     mkdir -p "$HOME/projects"
-fi
+    
+    echo -e "${GREEN}Butterscripts configuration applied!${NC}"
+}
 
-echo "Done."
-echo "Run 'source ~/.bashrc' if needed"
+# Main menu
+show_header
+echo -e "${YELLOW}Choose your Geany installation method:${NC}"
+echo
+echo -e "${CYAN}1.${NC} Install from APT (Geany 2.0 - Stable Debian package)"
+echo -e "   - Quick installation"
+echo -e "   - Automatic updates via APT"
+echo -e "   - Standard plugins included"
+echo
+echo -e "${CYAN}2.${NC} Compile from source (Geany 2.1 - Latest version)"
+echo -e "   - Latest features and improvements"
+echo -e "   - All available plugins"
+echo -e "   - Optimized for your system"
+echo
+echo -e "${CYAN}3.${NC} Exit"
+echo
+read -p "Enter your choice [1-3]: " choice
+
+case $choice in
+    1)
+        install_geany_apt
+        ;;
+    2)
+        install_geany_source
+        ;;
+    3)
+        echo -e "${YELLOW}Installation cancelled.${NC}"
+        exit 0
+        ;;
+    *)
+        echo -e "${RED}Invalid option. Exiting.${NC}"
+        exit 1
+        ;;
+esac
+
+echo
+echo -e "${GREEN}Done!${NC}"
+if [[ $choice == "2" ]]; then
+    echo -e "${YELLOW}Run 'source ~/.bashrc' if needed for PATH updates.${NC}"
+fi

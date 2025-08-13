@@ -39,7 +39,7 @@ echo ""
 
 # Show files that will be merged (in order)
 echo "Files to be merged (in this order):"
-find "$VIDEOS_DIR" -name "*.mkv" -type f | sort | nl
+find "$VIDEOS_DIR" -name "*.mkv" -type f | sort -V | nl
 echo ""
 
 # Ask for confirmation
@@ -52,7 +52,25 @@ fi
 echo "Starting merge..."
 
 # Perform the merge
-if find "$VIDEOS_DIR" -name "*.mkv" -type f -print0 | sort -z | xargs -0 mkvmerge -o "$TEMP_OUTPUT"; then
+# Build the mkvmerge command with proper syntax (first file, then + for subsequent files)
+mkv_files=()
+while IFS= read -r -d '' file; do
+    mkv_files+=("$file")
+done < <(find "$VIDEOS_DIR" -name "*.mkv" -type f -print0 | sort -Vz)
+
+if [ ${#mkv_files[@]} -eq 0 ]; then
+    echo "Error: No MKV files found!"
+    exit 1
+fi
+
+# Build mkvmerge command
+merge_cmd="mkvmerge -o \"$TEMP_OUTPUT\" \"${mkv_files[0]}\""
+for ((i=1; i<${#mkv_files[@]}; i++)); do
+    merge_cmd="$merge_cmd + \"${mkv_files[$i]}\""
+done
+
+# Execute the merge
+if eval $merge_cmd; then
     echo ""
     echo "✅ Merge completed successfully!"
     
